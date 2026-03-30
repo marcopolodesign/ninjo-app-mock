@@ -1,0 +1,374 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Menu, Bell, Plus, ArrowUp, X, Sparkles, Mic, Link as LinkIcon } from 'lucide-react';
+import { Sidebar } from './Sidebar';
+import { MetricsFlow, type Message, type StepType, type PathType } from './MetricsFlow';
+import { useAuth } from '../hooks/useAuth';
+import { NewChatIcon } from './NewChatIcon';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { PromptBox } from './PromptBox';
+import { ConversationsInbox } from './ConversationsInbox';
+
+import NinjoLogo from '../../imports/Frame1443-2003-674';
+
+import { NotificationDrawer } from './NotificationDrawer';
+
+interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  currentStep: StepType;
+  currentPath: PathType;
+  isReady?: boolean;
+  unread?: boolean;
+}
+
+interface Notification {
+  id: string;
+  chatId: string;
+  title: string;
+  type: 'ready';
+  timestamp: Date;
+}
+
+export function HomeScreen() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isActive, setIsActive] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<'copilot' | 'agents' | 'conversations'>('copilot');
+  const [conversations, setConversations] = useState<Conversation[]>([
+    {
+      id: '1',
+      title: "What’s my average conversion rate?",
+      messages: [],
+      currentStep: 'entry',
+      currentPath: null,
+      isReady: true,
+      unread: false
+    },
+    {
+      id: '2',
+      title: "Give me my last post impression metrics",
+      messages: [],
+      currentStep: 'entry',
+      currentPath: null,
+      isReady: true,
+      unread: false
+    }
+  ]);
+  const { user } = useAuth();
+
+  const suggestions = [
+    {
+      title: 'Analyze my sales',
+      role: 'AI DATA ANALYST',
+      description: 'Analyze performance, identify leaks, and optimize conversion',
+      imageUrl: 'https://images.unsplash.com/photo-1586448317606-cb1ec00298fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400'
+    },
+    {
+      title: 'Generate brand content',
+      role: 'AI CONTENT MANAGER',
+      description: 'Create tailor-made graphics using your brand DNA',
+      imageUrl: 'https://images.unsplash.com/photo-1616205255812-c07c8102cc02?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400'
+    },
+    {
+      title: 'Audit my ad campaigns',
+      role: 'AI MEDIA BUYER',
+      description: 'Review ROAS, CTR, and find conversion opportunities',
+      imageUrl: 'https://images.unsplash.com/photo-1759215524600-7971d6a4dac0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400'
+    },
+    {
+      title: 'Research my audience',
+      role: 'AI MEDIA BUYER',
+      description: 'Deep dive into buyer personas and engagement patterns',
+      imageUrl: 'https://images.unsplash.com/photo-1629787177096-9fbe3e2ef6f3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400'
+    },
+    {
+      title: 'Draft a growth strategy',
+      role: 'AI MARKETING STRATEGIST',
+      description: 'Mix metrics with content for high-impact engagement',
+      imageUrl: 'https://images.unsplash.com/photo-1621618765466-a0e74bd22170?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400'
+    },
+    {
+      title: 'Write a social post',
+      role: 'AI COPYWRITER',
+      description: 'Draft story sequences, posts, and campaign copy',
+      imageUrl: 'https://images.unsplash.com/photo-1739969492827-f916ade672df?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400'
+    }
+  ];
+
+  const activeConversation = conversations.find(c => c.id === activeChatId);
+
+  const handleStart = (message?: string) => {
+    const finalMessage = typeof message === 'string' ? message : inputText.trim();
+    if (!finalMessage && !isActive) return;
+
+    const newId = Math.random().toString(36).substring(7);
+    const newConv: Conversation = {
+      id: newId,
+      title: finalMessage || 'New Chat',
+      messages: [],
+      currentStep: 'entry',
+      currentPath: null,
+      isReady: false,
+      unread: false
+    };
+
+    setConversations(prev => [newConv, ...prev]);
+    setActiveChatId(newId);
+    setInputText('');
+    setIsActive(true);
+
+    // Simulate other conversation becoming ready after a delay
+    setTimeout(() => {
+      setConversations(prev => {
+        const otherIdx = prev.findIndex(c => c.id !== newId && !c.isReady);
+        if (otherIdx !== -1) {
+          const updated = [...prev];
+          const chat = updated[otherIdx];
+          updated[otherIdx] = { ...chat, isReady: true, unread: true };
+          
+          setNotifications(prevNotifs => [
+            {
+              id: Math.random().toString(),
+              chatId: chat.id,
+              title: chat.title,
+              type: 'ready',
+              timestamp: new Date()
+            },
+            ...prevNotifs
+          ]);
+          return updated;
+        }
+        return prev;
+      });
+    }, 6000);
+  };
+
+  const handleUpdateConversation = (id: string, data: Partial<Conversation>) => {
+    setConversations(prev => prev.map(c => 
+      c.id === id ? { ...c, ...data } : c
+    ));
+  };
+
+  const handleNewChat = () => {
+    setIsActive(false);
+    setActiveChatId(null);
+    setInputText('');
+    setIsSidebarOpen(false);
+  };
+
+  const handleSelectChat = (id: string) => {
+    setActiveChatId(id);
+    setIsActive(true);
+    setIsSidebarOpen(false);
+    // Clear unread and notifications for this chat
+    setConversations(prev => prev.map(c => 
+      c.id === id ? { ...c, unread: false, isReady: true } : c
+    ));
+    setNotifications(prev => prev.filter(n => n.chatId !== id));
+  };
+
+  const hasUnread = notifications.length > 0;
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && inputText.trim()) {
+      handleStart();
+    }
+  };
+
+  return (
+    <div className="flex h-screen w-full bg-[#f4f4f4] overflow-hidden font-mono-io selection:bg-orange-200">
+      <div className="relative mx-auto w-full max-w-[440px] h-screen bg-white shadow-2xl flex flex-col overflow-hidden">
+        <Sidebar 
+          isOpen={isSidebarOpen} 
+          onClose={() => setIsSidebarOpen(false)} 
+          recentChats={conversations.map(c => ({ id: c.id, title: c.title, unread: c.unread }))}
+          onSelectChat={handleSelectChat}
+          activeView={activeView}
+          onViewChange={(view) => {
+            setActiveView(view);
+            if (view === 'copilot') handleNewChat();
+          }}
+        />
+
+        <motion.main
+          initial={false}
+          animate={{ x: isSidebarOpen ? '256px' : 0 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="flex-1 h-full overflow-hidden bg-white relative z-30 shadow-[-10px_0_30px_rgba(0,0,0,0.05)]"
+        >
+          <div className="flex flex-col h-full relative">
+            {/* Gradient background */}
+            <motion.div 
+              className="absolute inset-0 z-0 pointer-events-none"
+              animate={{ 
+                opacity: isActive ? 0 : 1,
+                background: isActive 
+                  ? 'rgb(255, 255, 255)' 
+                  : 'linear-gradient(180deg, #FAFAFA 0%, #FAFAFA 47.59%, #B5E3FF 84.14%, #FFCEB8 98.02%)'
+              }}
+              transition={{ duration: 1, ease: [0.4, 0, 0.2, 1] }}
+            >
+              {!isActive && (
+                <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
+                  <NinjoLogo />
+                </div>
+              )}
+            </motion.div>
+
+            {/* Header */}
+            <header className="flex items-center justify-between px-6 h-14 shrink-0 z-10 relative">
+              <button onClick={() => setIsSidebarOpen(true)} className="flex items-center gap-4 p-1 hover:bg-zinc-100 transition-colors rounded-lg">
+                <Menu className="w-6 h-6 shrink-0" />
+                {activeView === 'conversations' && (
+                  <span className="font-['MD_IO'] text-[18px] leading-none uppercase tracking-tight text-black">
+                    Conversations
+                  </span>
+                )}
+              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={handleNewChat}
+                  className="p-2 hover:bg-zinc-100 transition-colors rounded-full"
+                >
+                  <NewChatIcon className="w-[18px] h-[18px] text-black" />
+                </button>
+                <button 
+                  onClick={() => setIsNotificationsOpen(true)}
+                  className="p-2 hover:bg-zinc-100 transition-colors rounded-full relative"
+                >
+                  <Bell className="w-5 h-5 text-black" />
+                  {hasUnread && (
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+                  )}
+                </button>
+              </div>
+            </header>
+
+            <NotificationDrawer 
+              isOpen={isNotificationsOpen}
+              onClose={() => setIsNotificationsOpen(false)}
+              notifications={notifications}
+              onSelectChat={handleSelectChat}
+            />
+
+            {/* Content */}
+            <AnimatePresence mode="wait">
+              {activeView === 'conversations' ? (
+                <motion.div 
+                  key="conversations-view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 h-full overflow-hidden relative"
+                >
+                  <ConversationsInbox />
+                </motion.div>
+              ) : !isActive ? (
+                <motion.div
+                  key="welcome"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="flex-1 flex flex-col relative z-10"
+                >
+                  {/* Welcome message */}
+                  <div className="flex flex-col items-center justify-center px-6 pt-12 pb-8">
+                    <h1 className="text-[25.91px] font-['MD_IO'] font-light leading-[30px] tracking-[-0.5182px] text-center max-w-[384px] text-black">
+                      How will you make your business better today?
+                    </h1>
+                  </div>
+
+                  {/* Suggestion cards (Manus structure) */}
+                  <div className="flex-1 flex flex-col justify-end pb-4">
+                    <div className="px-6 flex items-center justify-between mb-3">
+                      <h2 className="text-[15px] font-gt-america font-medium text-[#585858]">Get started</h2>
+                      <button className="text-[#a5a5a5] hover:text-black">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    <div className="overflow-x-auto no-scrollbar pb-2">
+                      <div className="flex gap-3 px-6 w-max">
+                        {suggestions.map((suggestion, idx) => (
+                          <motion.button
+                            key={idx}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: idx * 0.05 }}
+                            onClick={() => {
+                              if (suggestion.title === 'Generate brand content') {
+                                handleStart('Generate a sequence of stories for my IG account');
+                              } else {
+                                handleStart(suggestion.title);
+                              }
+                            }}
+                            className="bg-white border border-[#d9d9d9] rounded-[22px] p-4 flex items-center gap-3.5 text-left hover:border-zinc-400 transition-colors group shadow-sm w-[280px]"
+                          >
+                            <div className="w-[60px] h-[60px] rounded-xl overflow-hidden shrink-0 bg-zinc-100">
+                              <ImageWithFallback 
+                                src={suggestion.imageUrl}
+                                alt={suggestion.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-0.5 overflow-hidden">
+                              <p className="text-[16px] font-gt-america font-semibold text-black leading-tight truncate">
+                                {suggestion.title}
+                              </p>
+                              <p className="text-[12px] font-gt-america text-[#8e8e8e] leading-snug line-clamp-2">
+                                {suggestion.description}
+                              </p>
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Input bar (Figma PromptBox Design) */}
+                  <div className="px-6 pb-9 relative z-10">
+                    <PromptBox
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      onSend={() => handleStart()}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Say hi to Ninjō to get started"
+                    />
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={activeChatId}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex-1 overflow-hidden relative"
+                >
+              {activeConversation && (
+                    <MetricsFlow 
+                      username={user?.username} 
+                      messages={activeConversation.messages}
+                      currentStep={activeConversation.currentStep}
+                      currentPath={activeConversation.currentPath}
+                      firstMessage={activeConversation.messages.length === 0 ? activeConversation.title : ''}
+                      onUpdate={(data) => handleUpdateConversation(activeConversation.id, data)}
+                      hasOtherReadyChat={conversations.some(c => c.id !== activeChatId && c.unread)}
+                      onNavigateToOther={() => {
+                        const otherReady = conversations.find(c => c.id !== activeChatId && c.unread);
+                        if (otherReady) handleSelectChat(otherReady.id);
+                      }}
+                    />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.main>
+      </div>
+    </div>
+  );
+}

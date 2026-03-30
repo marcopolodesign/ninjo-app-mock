@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* MD IO */
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-Thin.ttf') format('truetype'); font-weight: 100; font-style: normal; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-ThinItalic.ttf') format('truetype'); font-weight: 100; font-style: italic; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-Light.ttf') format('truetype'); font-weight: 300; font-style: normal; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-LightItalic.ttf') format('truetype'); font-weight: 300; font-style: italic; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-Italic.ttf') format('truetype'); font-weight: 400; font-style: italic; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-Medium.ttf') format('truetype'); font-weight: 500; font-style: normal; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-MediumItalic.ttf') format('truetype'); font-weight: 500; font-style: italic; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-Semibold.ttf') format('truetype'); font-weight: 600; font-style: normal; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-SemiboldItalic.ttf') format('truetype'); font-weight: 600; font-style: italic; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-BoldItalic.ttf') format('truetype'); font-weight: 700; font-style: italic; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-Black.ttf') format('truetype'); font-weight: 900; font-style: normal; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-BlackItalic.ttf') format('truetype'); font-weight: 900; font-style: italic; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-Ultra.ttf') format('truetype'); font-weight: 950; font-style: normal; }
+@font-face { font-family: 'MD IO'; src: url('../assets/fonts/MDIO-UltraItalic.ttf') format('truetype'); font-weight: 950; font-style: italic; }
+
+:root {
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'MD IO', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-mono-io {
+  font-family: 'MD IO', monospace;
+  letter-spacing: -0.75px;
+  font-weight: 400;
+}
+
+.font-gt-america {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.02em;
+}
