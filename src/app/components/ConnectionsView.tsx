@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Check, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Check, X, ChevronDown, ChevronRight, RefreshCw, Toggle, AlertCircle } from 'lucide-react';
 
 type IntegrationStatus = 'connected' | 'available' | 'coming_soon';
+
+interface Feature {
+  id: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+}
 
 interface Integration {
   id: string;
@@ -11,9 +18,21 @@ interface Integration {
   status: IntegrationStatus;
   color: string;
   logo: React.ReactNode;
+  connectSteps: ConnectStep[];
+  features: Feature[];
+  lastSync?: string;
 }
 
-// Inline SVG logos for each platform
+interface ConnectStep {
+  type: 'info' | 'input' | 'oauth';
+  label?: string;
+  placeholder?: string;
+  hint?: string;
+  bullets?: string[];
+}
+
+// ─── Logos ────────────────────────────────────────────────────────────────────
+
 function SlackLogo() {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
@@ -84,10 +103,12 @@ function MakeLogo() {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="white">
       <circle cx="12" cy="12" r="3"/>
-      <path d="M12 2v4M12 18v4M2 12h4M18 12h4M5.636 5.636l2.828 2.828M15.536 15.536l2.828 2.828M5.636 18.364l2.828-2.828M15.536 8.464l2.828-2.828"/>
+      <path d="M12 2v4M12 18v4M2 12h4M18 12h4M5.636 5.636l2.828 2.828M15.536 15.536l2.828 2.828M5.636 18.364l2.828-2.828M15.536 8.464l2.828-2.828" stroke="white" strokeWidth="2" strokeLinecap="round"/>
     </svg>
   );
 }
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
 const INTEGRATIONS: Integration[] = [
   {
@@ -97,6 +118,25 @@ const INTEGRATIONS: Integration[] = [
     status: 'available',
     color: '#4A154B',
     logo: <SlackLogo />,
+    lastSync: '2 min ago',
+    connectSteps: [
+      {
+        type: 'info',
+        bullets: [
+          'Operator sends daily reports to a Slack channel',
+          'Handoff alerts ping you instantly',
+          'Lead summaries posted after each conversation',
+        ],
+      },
+      { type: 'input', label: 'Workspace URL', placeholder: 'yourcompany.slack.com', hint: 'Found in your Slack workspace settings' },
+      { type: 'input', label: 'Bot Token', placeholder: 'xoxb-...', hint: 'Create one at api.slack.com/apps' },
+      { type: 'input', label: 'Default Channel', placeholder: '#operator-alerts', hint: 'Where reports and alerts will be posted' },
+    ],
+    features: [
+      { id: 'daily_reports', label: 'Daily Reports', description: 'Post daily growth summary every morning', enabled: true },
+      { id: 'handoff_alerts', label: 'Handoff Alerts', description: 'Ping channel when manual intervention needed', enabled: true },
+      { id: 'lead_summaries', label: 'Lead Summaries', description: 'Post a summary after each qualified lead', enabled: false },
+    ],
   },
   {
     id: 'whatsapp',
@@ -105,6 +145,24 @@ const INTEGRATIONS: Integration[] = [
     status: 'available',
     color: '#25D366',
     logo: <WhatsAppLogo />,
+    lastSync: '5 min ago',
+    connectSteps: [
+      {
+        type: 'info',
+        bullets: [
+          'Operator handles incoming WhatsApp DMs',
+          'Seamless handoff to human when needed',
+          'Auto-replies for after-hours messages',
+        ],
+      },
+      { type: 'input', label: 'Phone Number ID', placeholder: '+1 (555) 000-0000', hint: 'Your WhatsApp Business number' },
+      { type: 'input', label: 'API Access Token', placeholder: 'EAAxxxxx...', hint: 'From Meta Business Suite → WhatsApp API' },
+    ],
+    features: [
+      { id: 'auto_reply', label: 'Auto Reply', description: 'Let Operator respond to new leads automatically', enabled: true },
+      { id: 'after_hours', label: 'After-Hours Mode', description: 'Auto-reply when you are offline', enabled: true },
+      { id: 'read_receipts', label: 'Read Receipts', description: 'Mark messages read when Operator processes them', enabled: false },
+    ],
   },
   {
     id: 'telegram',
@@ -113,14 +171,23 @@ const INTEGRATIONS: Integration[] = [
     status: 'available',
     color: '#2AABEE',
     logo: <TelegramLogo />,
-  },
-  {
-    id: 'n8n',
-    name: 'N8N',
-    description: 'Trigger Ninjo workflows via N8N automation nodes',
-    status: 'available',
-    color: '#EA4B71',
-    logo: <N8NLogo />,
+    connectSteps: [
+      {
+        type: 'info',
+        bullets: [
+          'Operator manages your Telegram bot conversations',
+          'Send broadcast messages to subscribers',
+          'Receive lead notifications directly in Telegram',
+        ],
+      },
+      { type: 'input', label: 'Bot Token', placeholder: '123456:ABC-DEF...', hint: 'Get from @BotFather on Telegram' },
+      { type: 'input', label: 'Notification Chat ID', placeholder: '-1001234567890', hint: 'Your personal or group chat ID for alerts' },
+    ],
+    features: [
+      { id: 'bot_replies', label: 'Bot Auto-Replies', description: 'Operator handles incoming bot messages', enabled: true },
+      { id: 'broadcasts', label: 'Broadcast Messages', description: 'Send bulk messages to subscribers', enabled: false },
+      { id: 'lead_notify', label: 'Lead Notifications', description: 'Get a Telegram ping for every new lead', enabled: true },
+    ],
   },
   {
     id: 'ghl',
@@ -129,6 +196,24 @@ const INTEGRATIONS: Integration[] = [
     status: 'available',
     color: '#039BE5',
     logo: <GoHighLevelLogo />,
+    connectSteps: [
+      {
+        type: 'info',
+        bullets: [
+          'New leads automatically added to GHL pipeline',
+          'Conversation notes synced to contact records',
+          'Trigger GHL workflows from Operator handoffs',
+        ],
+      },
+      { type: 'input', label: 'API Key', placeholder: 'eyJhbGciOiJIUzI1NiJ9...', hint: 'Settings → API → API Keys in GHL' },
+      { type: 'input', label: 'Location ID', placeholder: 'xxxxxxxxxxxxxxxx', hint: 'Your sub-account location ID' },
+      { type: 'input', label: 'Pipeline ID', placeholder: 'xxxxxxxxxxxxxxxx', hint: 'The pipeline where new leads will be added' },
+    ],
+    features: [
+      { id: 'sync_contacts', label: 'Sync Contacts', description: 'Push new leads to GHL automatically', enabled: true },
+      { id: 'sync_notes', label: 'Sync Notes', description: 'Attach conversation summaries to contacts', enabled: true },
+      { id: 'trigger_workflows', label: 'Trigger Workflows', description: 'Fire GHL automations on Operator events', enabled: false },
+    ],
   },
   {
     id: 'hubspot',
@@ -137,6 +222,47 @@ const INTEGRATIONS: Integration[] = [
     status: 'available',
     color: '#FF7A59',
     logo: <HubSpotLogo />,
+    connectSteps: [
+      {
+        type: 'info',
+        bullets: [
+          'Auto-create HubSpot contacts from qualified leads',
+          'Log conversations as CRM activities',
+          'Sync deal stages with Operator pipeline',
+        ],
+      },
+      { type: 'input', label: 'Private App Token', placeholder: 'pat-na1-xxxxxxxx-xxxx...', hint: 'Settings → Integrations → Private Apps in HubSpot' },
+      { type: 'input', label: 'Pipeline ID', placeholder: 'default', hint: 'The deal pipeline for new leads (leave "default" if unsure)' },
+    ],
+    features: [
+      { id: 'create_contacts', label: 'Create Contacts', description: 'Auto-create contacts for qualified leads', enabled: true },
+      { id: 'log_activities', label: 'Log Activities', description: 'Record conversations as CRM notes', enabled: true },
+      { id: 'sync_deals', label: 'Sync Deals', description: 'Move deals through pipeline on Operator events', enabled: false },
+    ],
+  },
+  {
+    id: 'n8n',
+    name: 'N8N',
+    description: 'Trigger Ninjo workflows via N8N automation nodes',
+    status: 'available',
+    color: '#EA4B71',
+    logo: <N8NLogo />,
+    connectSteps: [
+      {
+        type: 'info',
+        bullets: [
+          'Fire N8N workflows from any Operator event',
+          'Receive data from N8N into Operator conversations',
+          'Build custom multi-step automations',
+        ],
+      },
+      { type: 'input', label: 'Webhook URL', placeholder: 'https://your-n8n.app/webhook/...', hint: 'Create a Webhook node in N8N and paste its URL here' },
+      { type: 'input', label: 'API Key (optional)', placeholder: 'n8n_api_...', hint: 'Required only if your N8N instance has auth enabled' },
+    ],
+    features: [
+      { id: 'send_events', label: 'Send Events', description: 'Fire webhook on lead, handoff, and report events', enabled: true },
+      { id: 'receive_data', label: 'Receive Data', description: 'Accept N8N payloads into Operator context', enabled: false },
+    ],
   },
   {
     id: 'zapier',
@@ -145,6 +271,8 @@ const INTEGRATIONS: Integration[] = [
     status: 'coming_soon',
     color: '#FF4A00',
     logo: <ZapierLogo />,
+    connectSteps: [],
+    features: [],
   },
   {
     id: 'make',
@@ -153,65 +281,238 @@ const INTEGRATIONS: Integration[] = [
     status: 'coming_soon',
     color: '#6D00CC',
     logo: <MakeLogo />,
+    connectSteps: [],
+    features: [],
   },
 ];
 
-function StatusBadge({ status }: { status: IntegrationStatus }) {
-  if (status === 'connected') {
-    return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-mono-io uppercase tracking-widest text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-        <Check className="w-2.5 h-2.5" />
-        Connected
-      </span>
-    );
-  }
-  if (status === 'coming_soon') {
-    return (
-      <span className="text-[10px] font-mono-io uppercase tracking-widest text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full">
-        Coming Soon
-      </span>
-    );
-  }
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+function FeatureToggle({ feature, onChange }: { feature: Feature; onChange: (id: string, val: boolean) => void }) {
   return (
-    <span className="text-[10px] font-mono-io uppercase tracking-widest text-zinc-500 bg-[#f0f0f0] px-2 py-0.5 rounded-full">
-      Available
-    </span>
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[13px] font-mono-io text-black tracking-tight">{feature.label}</span>
+        <span className="text-[11px] text-zinc-400 leading-snug" style={{ fontFamily: 'Inter, sans-serif' }}>{feature.description}</span>
+      </div>
+      <button
+        onClick={() => onChange(feature.id, !feature.enabled)}
+        className={`shrink-0 w-10 h-5.5 rounded-full transition-colors relative ${feature.enabled ? 'bg-[#FF8F40]' : 'bg-zinc-200'}`}
+        style={{ height: '22px', width: '40px' }}
+      >
+        <motion.div
+          animate={{ x: feature.enabled ? 19 : 2 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+          className="absolute top-[3px] w-4 h-4 bg-white rounded-full shadow-sm"
+        />
+      </button>
+    </div>
   );
 }
 
-export function ConnectionsView() {
-  const [connected, setConnected] = useState<Set<string>>(new Set());
+function ConnectSheet({
+  integration,
+  onClose,
+  onConnect,
+}: {
+  integration: Integration;
+  onClose: () => void;
+  onConnect: () => void;
+}) {
+  const [step, setStep] = useState(0);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [connecting, setConnecting] = useState(false);
 
-  const toggleConnect = (id: string) => {
-    setConnected(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+  const inputSteps = integration.connectSteps.filter(s => s.type === 'input');
+  const infoStep = integration.connectSteps.find(s => s.type === 'info');
+  const totalSteps = 1 + inputSteps.length; // info + each input
+  const isLastStep = step === totalSteps - 1;
+
+  const handleNext = () => {
+    if (isLastStep) {
+      setConnecting(true);
+      setTimeout(() => {
+        setConnecting(false);
+        onConnect();
+      }, 1200);
+    } else {
+      setStep(s => s + 1);
+    }
+  };
+
+  const currentInput = step > 0 ? inputSteps[step - 1] : null;
+  const canProceed = step === 0 || (currentInput && (values[currentInput.label ?? ''] ?? '').trim().length > 0);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-black/30 z-[80]"
+      />
+
+      {/* Sheet */}
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[20px] z-[90] flex flex-col overflow-hidden"
+        style={{ maxHeight: '80%' }}
+      >
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 bg-zinc-200 rounded-full" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0] shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0" style={{ backgroundColor: integration.color }}>
+              {integration.logo}
+            </div>
+            <div>
+              <p className="text-[15px] font-mono-io text-black tracking-tight">Connect {integration.name}</p>
+              <p className="text-[10px] font-mono-io text-zinc-400 uppercase tracking-widest">
+                Step {step + 1} of {totalSteps}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-zinc-100 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-zinc-400" />
+          </button>
+        </div>
+
+        {/* Step progress */}
+        <div className="px-5 pt-3 pb-0 shrink-0 flex gap-1.5">
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? 'bg-[#FF8F40]' : 'bg-zinc-100'}`}
+            />
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-5">
+          <AnimatePresence mode="wait">
+            {step === 0 && infoStep ? (
+              <motion.div key="info" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
+                <p className="text-[14px] font-mono-io text-black tracking-tight">What you'll get</p>
+                <div className="flex flex-col gap-3">
+                  {infoStep.bullets?.map((b, i) => (
+                    <div key={i} className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-green-600" />
+                      </div>
+                      <p className="text-[13px] text-zinc-600 leading-snug" style={{ fontFamily: 'Inter, sans-serif' }}>{b}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : currentInput ? (
+              <motion.div key={`input-${step}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-3">
+                <label className="text-[14px] font-mono-io text-black tracking-tight">{currentInput.label}</label>
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder={currentInput.placeholder}
+                  value={values[currentInput.label ?? ''] ?? ''}
+                  onChange={e => setValues(prev => ({ ...prev, [currentInput.label ?? '']: e.target.value }))}
+                  className="w-full bg-[#f5f5f5] border border-[#e0e0e0] rounded-[10px] px-4 py-3 text-[14px] font-mono-io text-black placeholder:text-zinc-400 outline-none focus:border-[#FF8F40] transition-colors"
+                />
+                {currentInput.hint && (
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-zinc-400 leading-snug" style={{ fontFamily: 'Inter, sans-serif' }}>{currentInput.hint}</p>
+                  </div>
+                )}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 pb-8 pt-3 border-t border-[#f0f0f0] shrink-0 flex gap-3">
+          {step > 0 && (
+            <button
+              onClick={() => setStep(s => s - 1)}
+              className="flex-1 border border-[#d9d9d9] text-[13px] font-mono-io uppercase tracking-widest py-3 rounded-[10px] text-zinc-600 hover:border-zinc-400 transition-colors"
+            >
+              Back
+            </button>
+          )}
+          <button
+            onClick={handleNext}
+            disabled={!canProceed || connecting}
+            className="flex-1 bg-black text-white text-[13px] font-mono-io uppercase tracking-widest py-3 rounded-[10px] disabled:opacity-30 hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2"
+          >
+            {connecting ? (
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}>
+                <RefreshCw className="w-4 h-4" />
+              </motion.div>
+            ) : isLastStep ? 'Connect' : 'Next'}
+          </button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
+
+export function ConnectionsView() {
+  const [connectedMap, setConnectedMap] = useState<Record<string, boolean>>({});
+  const [featuresMap, setFeaturesMap] = useState<Record<string, Feature[]>>(() => {
+    const init: Record<string, Feature[]> = {};
+    INTEGRATIONS.forEach(i => { init[i.id] = i.features.map(f => ({ ...f })); });
+    return init;
+  });
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [sheetId, setSheetId] = useState<string | null>(null);
+
+  const sheetIntegration = INTEGRATIONS.find(i => i.id === sheetId);
+
+  const handleConnect = (id: string) => {
+    setConnectedMap(prev => ({ ...prev, [id]: true }));
+    setSheetId(null);
+    setExpandedId(id);
+  };
+
+  const handleDisconnect = (id: string) => {
+    setConnectedMap(prev => ({ ...prev, [id]: false }));
+    setExpandedId(null);
+  };
+
+  const handleFeatureToggle = (integrationId: string, featureId: string, val: boolean) => {
+    setFeaturesMap(prev => ({
+      ...prev,
+      [integrationId]: prev[integrationId].map(f => f.id === featureId ? { ...f, enabled: val } : f),
+    }));
   };
 
   return (
-    <div className="flex-1 h-full overflow-y-auto bg-white">
+    <div className="flex-1 h-full overflow-y-auto bg-white relative">
+
       {/* Header */}
       <div className="px-5 pt-6 pb-5 border-b border-[#f0f0f0]">
         <p className="text-[11px] font-mono-io uppercase tracking-widest text-[#FF8F40] mb-1">Ninjo</p>
-        <h1 className="text-[22px] font-mono-io font-normal tracking-tight text-black leading-tight">
-          Connections
-        </h1>
-        <p className="text-[13px] text-zinc-500 mt-1.5 leading-snug" style={{ fontFamily: 'Inter, GT America, sans-serif' }}>
-          Connect Ninjo to your favorite platforms and automate your workflows.
+        <h1 className="text-[22px] font-mono-io font-normal tracking-tight text-black leading-tight">Connections</h1>
+        <p className="text-[13px] text-zinc-500 mt-1.5 leading-snug" style={{ fontFamily: 'Inter, sans-serif' }}>
+          Connect Ninjo to your platforms and automate your workflows.
         </p>
       </div>
 
       {/* Integration cards */}
       <div className="px-5 py-5 flex flex-col gap-3">
         {INTEGRATIONS.map((integration, idx) => {
-          const isConnected = connected.has(integration.id);
+          const isConnected = connectedMap[integration.id] ?? false;
           const status: IntegrationStatus = isConnected ? 'connected' : integration.status;
+          const isExpanded = expandedId === integration.id;
+          const features = featuresMap[integration.id] ?? [];
 
           return (
             <motion.div
@@ -219,55 +520,114 @@ export function ConnectionsView() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.04, type: 'spring', damping: 24, stiffness: 200 }}
-              className="bg-white border border-[#e4e4e4] rounded-[12px] p-4 flex items-center gap-4"
+              className={`bg-white border rounded-[14px] overflow-hidden transition-colors ${
+                isConnected ? 'border-[#FF8F40]/30' : 'border-[#e4e4e4]'
+              }`}
             >
-              {/* Platform icon */}
-              <div
-                className="w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0"
-                style={{ backgroundColor: integration.color }}
-              >
-                {integration.logo}
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-[14px] font-mono-io tracking-tight text-black font-medium">
-                    {integration.name}
-                  </span>
-                  <StatusBadge status={status} />
-                </div>
-                <p className="text-[12px] text-zinc-500 leading-snug line-clamp-1" style={{ fontFamily: 'Inter, GT America, sans-serif' }}>
-                  {integration.description}
-                </p>
-              </div>
-
-              {/* CTA */}
-              {integration.status !== 'coming_soon' ? (
-                <button
-                  onClick={() => toggleConnect(integration.id)}
-                  className={`shrink-0 text-[11px] font-mono-io uppercase tracking-widest px-3 py-1.5 rounded-full transition-colors ${
-                    isConnected
-                      ? 'bg-[#f0f0f0] text-zinc-500 hover:bg-red-50 hover:text-red-500'
-                      : 'bg-black text-white hover:bg-zinc-800'
-                  }`}
+              {/* Card row */}
+              <div className="p-4 flex items-center gap-4">
+                <div
+                  className="w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: integration.color }}
                 >
-                  {isConnected ? 'Disconnect' : 'Connect'}
-                </button>
-              ) : (
-                <div className="shrink-0 w-[76px]" />
-              )}
+                  {integration.logo}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[14px] font-mono-io tracking-tight text-black font-medium">{integration.name}</span>
+                    {/* Status badge */}
+                    {status === 'connected' && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-mono-io uppercase tracking-widest text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                        <Check className="w-2.5 h-2.5" /> Connected
+                      </span>
+                    )}
+                    {status === 'coming_soon' && (
+                      <span className="text-[10px] font-mono-io uppercase tracking-widest text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full">Soon</span>
+                    )}
+                  </div>
+                  <p className="text-[12px] text-zinc-500 leading-snug line-clamp-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    {integration.description}
+                  </p>
+                  {isConnected && integration.lastSync && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <RefreshCw className="w-2.5 h-2.5 text-zinc-400" />
+                      <span className="text-[10px] font-mono-io text-zinc-400 uppercase tracking-widest">Synced {integration.lastSync}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right action */}
+                {integration.status !== 'coming_soon' && (
+                  isConnected ? (
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : integration.id)}
+                      className="shrink-0 flex items-center gap-1 text-[11px] font-mono-io uppercase tracking-widest text-zinc-500 hover:text-black transition-colors"
+                    >
+                      <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                        <ChevronDown className="w-4 h-4" />
+                      </motion.div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setSheetId(integration.id)}
+                      className="shrink-0 text-[11px] font-mono-io uppercase tracking-widest px-3 py-1.5 rounded-full bg-black text-white hover:bg-zinc-800 transition-colors"
+                    >
+                      Connect
+                    </button>
+                  )
+                )}
+              </div>
+
+              {/* Expanded: feature toggles + disconnect */}
+              <AnimatePresence>
+                {isExpanded && isConnected && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 flex flex-col gap-4 border-t border-[#f0f0f0] pt-4">
+                      <p className="text-[11px] font-mono-io uppercase tracking-widest text-zinc-400">Features</p>
+                      <div className="flex flex-col gap-4">
+                        {features.map(feature => (
+                          <FeatureToggle
+                            key={feature.id}
+                            feature={feature}
+                            onChange={(fid, val) => handleFeatureToggle(integration.id, fid, val)}
+                          />
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => handleDisconnect(integration.id)}
+                        className="text-[11px] font-mono-io uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors text-left mt-1"
+                      >
+                        Disconnect {integration.name}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Footer hint */}
       <div className="px-5 pb-8 pt-2">
-        <p className="text-[11px] font-mono-io text-zinc-400 uppercase tracking-widest text-center">
-          More integrations coming soon
-        </p>
+        <p className="text-[11px] font-mono-io text-zinc-400 uppercase tracking-widest text-center">More integrations coming soon</p>
       </div>
+
+      {/* Connect sheet */}
+      <AnimatePresence>
+        {sheetId && sheetIntegration && (
+          <ConnectSheet
+            integration={sheetIntegration}
+            onClose={() => setSheetId(null)}
+            onConnect={() => handleConnect(sheetId)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
