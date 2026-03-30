@@ -11,6 +11,7 @@ interface ScheduledTask {
   nextRun: string;
   status: 'active' | 'paused' | 'running';
   isDefault?: boolean;
+  lastResult?: string;
 }
 
 interface HandoffAlert {
