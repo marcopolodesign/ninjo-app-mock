@@ -139,8 +139,8 @@ const MOCK_CONVERSATIONS: Conversation[] = [
   },
 ];
 
-export function ConversationsInbox() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export function ConversationsInbox({ initialConversationId }: { initialConversationId?: string }) {
+  const [selectedId, setSelectedId] = useState<string | null>(initialConversationId ?? null);
   const selectedConv = MOCK_CONVERSATIONS.find(c => c.id === selectedId);
 
   if (selectedId && selectedConv) {

@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { X, MessageSquare, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface Notification {
   id: string;
   chatId: string;
   title: string;
-  type: 'ready';
+  type: 'ready' | 'handoff';
   timestamp: Date;
 }
 
@@ -64,12 +64,15 @@ export function NotificationDrawer({ isOpen, onClose, notifications, onSelectCha
                     }}
                     className="w-full bg-white border border-[#d9d9d9] rounded-2xl p-4 text-left hover:border-black transition-all group flex gap-3 items-start"
                   >
-                    <div className="size-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-5 h-5 text-orange-500" />
+                    <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${notif.type === 'handoff' ? 'bg-red-50' : 'bg-orange-50'}`}>
+                      {notif.type === 'handoff'
+                        ? <AlertTriangle className="w-5 h-5 text-red-500" />
+                        : <CheckCircle2 className="w-5 h-5 text-orange-500" />
+                      }
                     </div>
                     <div className="flex flex-col gap-1 overflow-hidden">
                       <p className="text-[14px] font-gt-america font-medium text-black leading-tight">
-                        Your conversation is ready to view
+                        {notif.type === 'handoff' ? 'Manual intervention recommended' : 'Your conversation is ready to view'}
                       </p>
                       <p className="text-[12px] font-gt-america text-[#8e8e8e] truncate">
                         "{notif.title}"

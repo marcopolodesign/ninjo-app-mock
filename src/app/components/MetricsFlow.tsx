@@ -36,15 +36,15 @@ interface MetricsFlowProps {
   onNavigateToOther?: () => void;
 }
 
-export function MetricsFlow({ 
-  username = '@yourbusiness', 
+export function MetricsFlow({
+  username = '@yourbusiness',
   firstMessage = '',
   messages,
   currentPath,
   currentStep,
   onUpdate,
   hasOtherReadyChat,
-  onNavigateToOther
+  onNavigateToOther,
 }: MetricsFlowProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(!!firstMessage && messages.length === 0);

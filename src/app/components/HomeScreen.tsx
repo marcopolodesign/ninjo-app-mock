@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, Bell, Plus, ArrowUp, X, Sparkles, Mic, Link as LinkIcon } from 'lucide-react';
-import { Sidebar } from './Sidebar';
+import { Sidebar, type ViewType } from './Sidebar';
 import { MetricsFlow, type Message, type StepType, type PathType } from './MetricsFlow';
+import { ReportsView } from './ReportsView';
+import { RoleplayChat } from './RoleplayChat';
 import { useAuth } from '../hooks/useAuth';
 import { NewChatIcon } from './NewChatIcon';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { PromptBox } from './PromptBox';
 import { ConversationsInbox } from './ConversationsInbox';
+import { ConnectionsView } from './ConnectionsView';
 
 import NinjoLogo from '../../imports/Frame1443-2003-674';
 
@@ -21,13 +24,14 @@ interface Conversation {
   currentPath: PathType;
   isReady?: boolean;
   unread?: boolean;
+  type?: 'normal' | 'simulation';
 }
 
 interface Notification {
   id: string;
   chatId: string;
   title: string;
-  type: 'ready';
+  type: 'ready' | 'handoff';
   timestamp: Date;
 }
 
@@ -38,7 +42,8 @@ export function HomeScreen() {
   const [isActive, setIsActive] = useState(false);
   const [inputText, setInputText] = useState('');
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<'copilot' | 'agents' | 'conversations'>('copilot');
+  const [activeView, setActiveView] = useState<ViewType>('operator');
+  const [deepLinkConversationId, setDeepLinkConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: '1',
@@ -161,6 +166,25 @@ export function HomeScreen() {
     setIsSidebarOpen(false);
   };
 
+  const handleNewRoleplay = () => {
+    const newId = Math.random().toString(36).substring(7);
+    const simConv: Conversation = {
+      id: newId,
+      title: 'Roleplay Session',
+      messages: [],
+      currentStep: 'entry',
+      currentPath: null,
+      isReady: false,
+      unread: false,
+      type: 'simulation',
+    };
+    setConversations(prev => [simConv, ...prev]);
+    setActiveChatId(newId);
+    setActiveView('operator');
+    setIsActive(true);
+    setIsSidebarOpen(false);
+  };
+
   const handleSelectChat = (id: string) => {
     setActiveChatId(id);
     setIsActive(true);
@@ -183,16 +207,19 @@ export function HomeScreen() {
   return (
     <div className="flex h-screen w-full bg-[#f4f4f4] overflow-hidden font-mono-io selection:bg-orange-200">
       <div className="relative mx-auto w-full max-w-[440px] h-screen bg-white shadow-2xl flex flex-col overflow-hidden">
-        <Sidebar 
-          isOpen={isSidebarOpen} 
-          onClose={() => setIsSidebarOpen(false)} 
-          recentChats={conversations.map(c => ({ id: c.id, title: c.title, unread: c.unread }))}
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          recentChats={conversations.map(c => ({ id: c.id, title: c.title, unread: c.unread, isSimulation: c.type === 'simulation' }))}
           onSelectChat={handleSelectChat}
           activeView={activeView}
           onViewChange={(view) => {
             setActiveView(view);
-            if (view === 'copilot') handleNewChat();
+            if (view === 'operator') handleNewChat();
+            if (view !== 'conversations') setDeepLinkConversationId(null);
+            setIsSidebarOpen(false);
           }}
+          onNewRoleplay={handleNewRoleplay}
         />
 
         <motion.main
@@ -224,9 +251,9 @@ export function HomeScreen() {
             <header className="flex items-center justify-between px-6 h-14 shrink-0 z-10 relative">
               <button onClick={() => setIsSidebarOpen(true)} className="flex items-center gap-4 p-1 hover:bg-zinc-100 transition-colors rounded-lg">
                 <Menu className="w-6 h-6 shrink-0" />
-                {activeView === 'conversations' && (
+                {activeView !== 'operator' && (
                   <span className="font-['MD_IO'] text-[18px] leading-none uppercase tracking-tight text-black">
-                    Conversations
+                    {activeView === 'conversations' ? 'Conversations' : activeView === 'reports' ? 'Reports' : activeView === 'connections' ? 'Connections' : 'Agents'}
                   </span>
                 )}
               </button>
@@ -258,15 +285,40 @@ export function HomeScreen() {
 
             {/* Content */}
             <AnimatePresence mode="wait">
-              {activeView === 'conversations' ? (
-                <motion.div 
-                  key="conversations-view"
+              {activeView === 'connections' ? (
+                <motion.div
+                  key="connections-view"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className="flex-1 h-full overflow-hidden relative"
                 >
-                  <ConversationsInbox />
+                  <ConnectionsView />
+                </motion.div>
+              ) : activeView === 'conversations' ? (
+                <motion.div
+                  key={`conversations-view-${deepLinkConversationId}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 h-full overflow-hidden relative"
+                >
+                  <ConversationsInbox initialConversationId={deepLinkConversationId ?? undefined} />
+                </motion.div>
+              ) : activeView === 'reports' ? (
+                <motion.div
+                  key="reports-view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 h-full overflow-hidden relative"
+                >
+                  <ReportsView
+                    onViewConversation={(id) => {
+                      setDeepLinkConversationId(id);
+                      setActiveView('conversations');
+                    }}
+                  />
                 </motion.div>
               ) : !isActive ? (
                 <motion.div
@@ -349,19 +401,23 @@ export function HomeScreen() {
                   className="flex-1 overflow-hidden relative"
                 >
               {activeConversation && (
-                    <MetricsFlow 
-                      username={user?.username} 
-                      messages={activeConversation.messages}
-                      currentStep={activeConversation.currentStep}
-                      currentPath={activeConversation.currentPath}
-                      firstMessage={activeConversation.messages.length === 0 ? activeConversation.title : ''}
-                      onUpdate={(data) => handleUpdateConversation(activeConversation.id, data)}
-                      hasOtherReadyChat={conversations.some(c => c.id !== activeChatId && c.unread)}
-                      onNavigateToOther={() => {
-                        const otherReady = conversations.find(c => c.id !== activeChatId && c.unread);
-                        if (otherReady) handleSelectChat(otherReady.id);
-                      }}
-                    />
+                    activeConversation.type === 'simulation' ? (
+                      <RoleplayChat key={activeConversation.id} />
+                    ) : (
+                      <MetricsFlow
+                        username={user?.username}
+                        messages={activeConversation.messages}
+                        currentStep={activeConversation.currentStep}
+                        currentPath={activeConversation.currentPath}
+                        firstMessage={activeConversation.messages.length === 0 ? activeConversation.title : ''}
+                        onUpdate={(data) => handleUpdateConversation(activeConversation.id, data)}
+                        hasOtherReadyChat={conversations.some(c => c.id !== activeChatId && c.unread)}
+                        onNavigateToOther={() => {
+                          const otherReady = conversations.find(c => c.id !== activeChatId && c.unread);
+                          if (otherReady) handleSelectChat(otherReady.id);
+                        }}
+                      />
+                    )
                   )}
                 </motion.div>
               )}
