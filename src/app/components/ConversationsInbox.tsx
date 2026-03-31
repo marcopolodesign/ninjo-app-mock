@@ -174,33 +174,31 @@ export function ConversationsInbox({ initialConversationId }: { initialConversat
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#f5f5f5] animate-in fade-in duration-500">
+    <div className="flex flex-col h-full bg-white animate-in fade-in duration-500">
       {/* Header */}
-      <div className="px-4 py-4 space-y-4 bg-white/80 backdrop-blur-md sticky top-0 z-10">
-        {null}
-
+      <div className="px-4 pt-3 pb-3 space-y-3 bg-white sticky top-0 z-10">
         {/* Search & Filter */}
-        <div className="flex gap-3">
-          <div className="flex-1 bg-[#d9d9d9]/30 rounded-xl px-3 py-2.5 flex items-center gap-2 border border-black/5">
-            <Search className="w-4 h-4 text-black/60" />
-            <input 
-              type="text" 
-              placeholder="SEARCH" 
-              className="bg-transparent border-none outline-none text-[12px] font-gt-america uppercase w-full placeholder:text-black/40"
+        <div className="flex gap-3 items-center">
+          <div className="flex-1 bg-[#f0f0f0] rounded-full px-4 py-2.5 flex items-center gap-2.5">
+            <Search className="w-4 h-4 text-black/40" />
+            <input
+              type="text"
+              placeholder="SEARCH"
+              className="bg-transparent border-none outline-none text-[12px] font-['MD_IO'] uppercase w-full placeholder:text-black/40 tracking-wide"
             />
           </div>
-          <button className="size-10 rounded-full border border-[#d9d9d9] flex items-center justify-center hover:bg-black/5 transition-colors">
-             <ListFilter className="w-4 h-4" />
+          <button className="size-10 rounded-full border border-[#e0e0e0] flex items-center justify-center hover:bg-black/5 transition-colors">
+             <ListFilter className="w-4 h-4 text-black/50" />
           </button>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2">
           {['ALL', 'UNREAD', 'NEEDS ATTENTION'].map((tab, i) => (
-            <button 
+            <button
               key={tab}
-              className={`px-6 py-2 rounded-xl text-[12px] font-gt-america uppercase transition-all ${
-                i === 0 ? 'bg-[#0088ff]/10 text-[#0088ff] font-medium' : 'bg-[#edeaea] text-black'
+              className={`px-5 py-2 rounded-full text-[11px] font-['MD_IO'] uppercase tracking-wider transition-all ${
+                i === 0 ? 'bg-[#0088ff]/10 text-[#0088ff] font-medium' : 'bg-[#f0f0f0] text-black/60'
               }`}
             >
               {tab}
@@ -210,31 +208,32 @@ export function ConversationsInbox({ initialConversationId }: { initialConversat
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
-        {MOCK_CONVERSATIONS.map((conv) => (
-          <button 
+      <div className="flex-1 overflow-y-auto">
+        {MOCK_CONVERSATIONS.map((conv, index) => (
+          <button
             key={conv.id}
             onClick={() => setSelectedId(conv.id)}
-            className="w-full bg-white border border-[#d9d9d9] rounded-2xl p-4 flex gap-3.5 hover:border-black/20 transition-all text-left group active:scale-[0.98]"
+            className="w-full px-4 py-4 flex gap-3.5 hover:bg-[#fafafa] transition-all text-left group active:bg-[#f5f5f5] border-l-[3px] border-l-[#e8e8e8] border-b border-b-[#f0f0f0]"
           >
-            <div className="size-12 rounded-full border border-black/10 flex items-center justify-center bg-zinc-50 shrink-0 font-gt-america text-[13px]">
+            <div className="size-11 rounded-full border border-black/10 flex items-center justify-center bg-white shrink-0 text-[13px] font-['MD_IO']">
               {conv.initials}
             </div>
             <div className="flex-1 flex flex-col gap-1 overflow-hidden">
               <div className="flex items-center justify-between">
-                <span className="text-[16.5px] font-gt-america font-light tracking-tight">{conv.name}</span>
-                <div className="flex items-center gap-1">
+                <span className="text-[15px] font-['MD_IO'] tracking-tight">{conv.name}</span>
+                <div className="flex items-center gap-1.5 shrink-0">
                   {conv.unread && (
-                    <div className="size-2 bg-[#ff8f40] rounded-full mr-1" />
+                    <div className="size-2 bg-[#ff8f40] rounded-full" />
                   )}
-                  <span className="text-[11px] text-black/40 font-gt-america">{conv.time}</span>
+                  <span className="text-[11px] text-black/35 font-['MD_IO']">{conv.time}</span>
                 </div>
               </div>
-              <p className="text-[13.5px] text-[#585858] font-gt-america leading-tight line-clamp-2">
+              <p className="text-[13px] text-black/45 font-gt-america leading-snug line-clamp-3 mt-0.5">
                 {conv.lastMessage}
               </p>
               <div className="mt-2">
-                <span className="bg-[#ffb5b7] text-[#570300] text-[9px] px-2 py-1 rounded font-medium font-gt-america">
+                <span className="bg-[#ffb5b7] text-[#570300] text-[9px] px-2.5 py-1 rounded font-medium font-['MD_IO'] inline-flex items-center gap-1.5 tracking-wide">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5"/></svg>
                   {conv.platform}
                 </span>
               </div>
