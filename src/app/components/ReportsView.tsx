@@ -42,6 +42,24 @@ const DEFAULT_TASKS: ScheduledTask[] = [
     nextRun: 'Tomorrow @ 9:00 AM',
     status: 'active',
     isDefault: true,
+    lastResult: `**Daily Growth Analysis — Today @ 9:00 AM**
+
+**Overview**
+47 new leads processed in the last 24 hours. Overall conversion rate: 12.7% (+2.1% vs. yesterday).
+
+**Top Opportunities**
+• Exequiel Selickas — High intent, requested pricing twice. Recommend immediate follow-up.
+• Roberto M. — Engaged with 3 posts, opened DM thread. Warm lead.
+• Valentina G. — Booking signal detected in latest message.
+
+**Flags**
+• 3 leads went cold after initial reply. Consider a re-engagement sequence.
+• Response time avg: 4.2h — target is under 2h.
+
+**Action Items**
+1. Follow up with Exequiel today.
+2. Send Roberto a calendar link.
+3. Review cold lead re-engagement template.`,
   },
   {
     id: '2',
@@ -51,6 +69,19 @@ const DEFAULT_TASKS: ScheduledTask[] = [
     lastRun: 'Mon Mar 24',
     nextRun: 'Mon Mar 31',
     status: 'active',
+    lastResult: `**Weekly Conversion Summary — Mon Mar 24**
+
+**Closed Deals:** 6  |  **Lost Leads:** 14  |  **Win Rate:** 30%
+
+**Patterns Identified**
+• Leads that received a reply within 1h converted at 3× the average rate.
+• Price objections accounted for 57% of losses — mostly at the offer stage.
+• Leads from story replies had higher intent than feed comment leads.
+
+**3 Actionable Improvements**
+1. Set up an auto-reply for new DMs to cut response time under 1h.
+2. Create a price-objection rebuttal script for the offer stage.
+3. Prioritize story reply leads — route them to the top of the queue.`,
   },
   {
     id: '3',
@@ -60,10 +91,27 @@ const DEFAULT_TASKS: ScheduledTask[] = [
     lastRun: '1 day ago',
     nextRun: 'Next post',
     status: 'active',
+    lastResult: `**Post Performance — Mar 29 Reel**
+
+**Reach:** 18,400  |  **Engagement Rate:** 6.8%  |  **DM Replies:** 23
+
+**Comment Sentiment**
+• 78% positive — strong resonance with the transformation angle.
+• 14% neutral questions (pricing, availability).
+• 8% negative — mostly unrelated.
+
+**Top Follow-Up Targets**
+1. @lucas.fern — commented "I need this" + sent DM. Priority.
+2. @mia.coast — asked about pricing in comments.
+3. @ryan.ko — saved the post and replied to story.
+
+**Recommendation**
+DM the top 3 within the next 2 hours while intent is highest.`,
   },
 ];
 
 const HANDOFF_ALERTS: HandoffAlert[] = [
+  { id: 'hot-lead-1', title: '🔥 Hot lead ready to close', description: 'Carlos Mendez — asked for pricing, ready to sign', time: 'Just now', severity: 'high', conversationId: 'hot-lead-carlos' },
   { id: '1', title: 'High-value lead detected', description: 'Exequiel Selickas — manual intervention recommended', time: '12 min ago', severity: 'high', conversationId: '1' },
   { id: '2', title: 'Booking opportunity', description: 'Roberto M. — showing strong intent signals', time: '1h ago', severity: 'medium', conversationId: '2' },
   { id: '3', title: 'Follow-up needed', description: 'Valentina G. — 3 unanswered messages', time: '3h ago', severity: 'medium', conversationId: '3' },
@@ -81,6 +129,7 @@ export function ReportsView({ onViewConversation }: ReportsViewProps) {
   const [newPrompt, setNewPrompt] = useState('');
   const [newSchedule, setNewSchedule] = useState(SCHEDULE_OPTIONS[0]);
   const [showScheduleDropdown, setShowScheduleDropdown] = useState(false);
+  const [resultTask, setResultTask] = useState<ScheduledTask | null>(null);
 
   const handleAddTask = () => {
     if (!newTitle.trim() || !newPrompt.trim()) return;
@@ -263,8 +312,11 @@ export function ReportsView({ onViewConversation }: ReportsViewProps) {
                           >
                             {task.status === 'active' ? <><Pause className="w-3 h-3" /> Pause</> : <><Play className="w-3 h-3" /> Resume</>}
                           </button>
-                          {task.lastRun !== 'Never' && (
-                            <button className="flex items-center gap-1.5 text-[11px] font-mono-io uppercase tracking-tight text-[#FF8F40] hover:opacity-70 transition-opacity border border-[#FF8F40]/30 rounded-[6px] px-3 py-1.5">
+                          {task.lastRun !== 'Never' && task.lastResult && (
+                            <button
+                              onClick={() => setResultTask(task)}
+                              className="flex items-center gap-1.5 text-[11px] font-mono-io uppercase tracking-tight text-[#FF8F40] hover:opacity-70 transition-opacity border border-[#FF8F40]/30 rounded-[6px] px-3 py-1.5"
+                            >
                               <ArrowRight className="w-3 h-3" /> View Last Result
                             </button>
                           )}
@@ -315,6 +367,61 @@ export function ReportsView({ onViewConversation }: ReportsViewProps) {
         </section>
 
       </div>
+
+      {/* Last Result Modal */}
+      <AnimatePresence>
+        {resultTask && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+            onClick={() => setResultTask(null)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-lg bg-white rounded-t-[20px] flex flex-col overflow-hidden"
+              style={{ maxHeight: '80vh' }}
+            >
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-[#d9d9d9]" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[#f0f0f0]">
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[13px] font-mono-io text-black tracking-tight">{resultTask.title}</p>
+                  <p className="text-[11px] font-mono-io text-zinc-400 uppercase">Last run: {resultTask.lastRun}</p>
+                </div>
+                <button onClick={() => setResultTask(null)} className="text-zinc-400 hover:text-black transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="overflow-y-auto px-5 py-4 flex-1">
+                {resultTask.lastResult!.split('\n').map((line, i) => {
+                  const bold = line.startsWith('**') && line.endsWith('**');
+                  const bullet = line.startsWith('•') || /^\d+\./.test(line);
+                  if (bold) {
+                    return <p key={i} className="text-[13px] font-mono-io text-black font-semibold mt-3 mb-1 first:mt-0">{line.replace(/\*\*/g, '')}</p>;
+                  }
+                  if (bullet) {
+                    return <p key={i} className="text-[13px] font-mono-io text-zinc-600 leading-relaxed pl-2">{line}</p>;
+                  }
+                  if (line.trim() === '') return <div key={i} className="h-1" />;
+                  return <p key={i} className="text-[13px] font-mono-io text-zinc-600 leading-relaxed">{line}</p>;
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

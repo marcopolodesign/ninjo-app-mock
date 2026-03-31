@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import {
-  MessageSquare, Settings, BrainCircuit, Users, LayoutGrid,
+  MessageSquare, Settings, BrainCircuit, Users,
   BarChart2, Play, Link2
 } from 'lucide-react';
+import NinjoLogo from './ninjo-logo.svg';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -58,12 +59,8 @@ export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView
           {/* Top section: Menu and Logo */}
           <div className="flex flex-col gap-11">
              <div className="flex items-center gap-3">
-               <div className="w-8 h-8 flex items-center justify-center">
-                 <LayoutGrid className="w-6 h-6" />
-               </div>
-               <div className="flex flex-col">
-                  <span className="text-sm font-normal tracking-widest text-black">NINJŌ</span>
-               </div>
+               <img src={NinjoLogo} alt="Ninjō" className="w-8 h-8 rounded-[6px]" />
+               <span className="text-sm font-normal tracking-widest text-black">NINJŌ</span>
              </div>
 
              <div className="flex flex-col gap-5">
@@ -104,13 +101,13 @@ export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView
               ))}
             </div>
 
-            {/* Roleplay entry */}
+            {/* TestDrive entry */}
             <button
               onClick={() => { onNewRoleplay(); onClose(); }}
               className="flex items-center gap-2 text-[12px] text-zinc-400 hover:text-[#FF8F40] transition-colors uppercase tracking-tight mt-1"
             >
               <Play className="w-3.5 h-3.5" />
-              New Roleplay
+              New TestDrive
             </button>
           </div>
 

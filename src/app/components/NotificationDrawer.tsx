@@ -8,6 +8,10 @@ interface Notification {
   title: string;
   type: 'ready' | 'handoff';
   timestamp: Date;
+  leadName?: string;
+  reason?: string;
+  targetView?: 'inbox';
+  inboxConversationId?: string;
 }
 
 interface NotificationDrawerProps {
@@ -15,9 +19,10 @@ interface NotificationDrawerProps {
   onClose: () => void;
   notifications: Notification[];
   onSelectChat: (chatId: string) => void;
+  onSelectInboxConversation: (conversationId: string) => void;
 }
 
-export function NotificationDrawer({ isOpen, onClose, notifications, onSelectChat }: NotificationDrawerProps) {
+export function NotificationDrawer({ isOpen, onClose, notifications, onSelectChat, onSelectInboxConversation }: NotificationDrawerProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -59,28 +64,56 @@ export function NotificationDrawer({ isOpen, onClose, notifications, onSelectCha
                   <button
                     key={notif.id}
                     onClick={() => {
-                      onSelectChat(notif.chatId);
-                      onClose();
+                      if (notif.targetView === 'inbox' && notif.inboxConversationId) {
+                        onSelectInboxConversation(notif.inboxConversationId);
+                      } else {
+                        onSelectChat(notif.chatId);
+                        onClose();
+                      }
                     }}
                     className="w-full bg-white border border-[#d9d9d9] rounded-2xl p-4 text-left hover:border-black transition-all group flex gap-3 items-start"
                   >
-                    <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${notif.type === 'handoff' ? 'bg-red-50' : 'bg-orange-50'}`}>
-                      {notif.type === 'handoff'
-                        ? <AlertTriangle className="w-5 h-5 text-red-500" />
-                        : <CheckCircle2 className="w-5 h-5 text-orange-500" />
-                      }
-                    </div>
-                    <div className="flex flex-col gap-1 overflow-hidden">
-                      <p className="text-[14px] font-gt-america font-medium text-black leading-tight">
-                        {notif.type === 'handoff' ? 'Manual intervention recommended' : 'Your conversation is ready to view'}
-                      </p>
-                      <p className="text-[12px] font-gt-america text-[#8e8e8e] truncate">
-                        "{notif.title}"
-                      </p>
-                      <p className="text-[10px] font-gt-america text-[#c0c0c0] mt-1">
-                        Just now
-                      </p>
-                    </div>
+                    {notif.leadName ? (
+                      <>
+                        <div className="size-10 rounded-xl flex items-center justify-center shrink-0 bg-orange-50">
+                          <span className="text-[20px] leading-none">🔥</span>
+                        </div>
+                        <div className="flex flex-col gap-1 overflow-hidden">
+                          <p className="text-[14px] font-gt-america font-semibold text-black leading-tight">
+                            Hot lead ready to close
+                          </p>
+                          <p className="text-[13px] font-gt-america text-black truncate">
+                            {notif.leadName}
+                          </p>
+                          <p className="text-[11px] font-gt-america text-[#FF8F40] leading-tight">
+                            {notif.reason}
+                          </p>
+                          <p className="text-[10px] font-gt-america text-[#c0c0c0] mt-1">
+                            Just now
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${notif.type === 'handoff' ? 'bg-red-50' : 'bg-orange-50'}`}>
+                          {notif.type === 'handoff'
+                            ? <AlertTriangle className="w-5 h-5 text-red-500" />
+                            : <CheckCircle2 className="w-5 h-5 text-orange-500" />
+                          }
+                        </div>
+                        <div className="flex flex-col gap-1 overflow-hidden">
+                          <p className="text-[14px] font-gt-america font-medium text-black leading-tight">
+                            {notif.type === 'handoff' ? 'Manual intervention recommended' : 'Your conversation is ready to view'}
+                          </p>
+                          <p className="text-[12px] font-gt-america text-[#8e8e8e] truncate">
+                            "{notif.title}"
+                          </p>
+                          <p className="text-[10px] font-gt-america text-[#c0c0c0] mt-1">
+                            Just now
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </button>
                 ))
               )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, Bell, Plus, ArrowUp, X, Sparkles, Mic, Link as LinkIcon } from 'lucide-react';
 import { Sidebar, type ViewType } from './Sidebar';
@@ -33,6 +33,10 @@ interface Notification {
   title: string;
   type: 'ready' | 'handoff';
   timestamp: Date;
+  leadName?: string;
+  reason?: string;
+  targetView?: 'inbox';
+  inboxConversationId?: string;
 }
 
 export function HomeScreen() {
@@ -65,6 +69,23 @@ export function HomeScreen() {
     }
   ]);
   const { user } = useAuth();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNotifications(prev => [{
+        id: 'hot-lead-notif-1',
+        chatId: '',
+        title: 'Carlos Mendez · Hot Lead',
+        type: 'handoff' as const,
+        timestamp: new Date(),
+        leadName: 'Carlos Mendez',
+        reason: 'Asked for pricing · Ready to sign',
+        targetView: 'inbox' as const,
+        inboxConversationId: 'hot-lead-carlos',
+      }, ...prev]);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const suggestions = [
     {
@@ -170,7 +191,7 @@ export function HomeScreen() {
     const newId = Math.random().toString(36).substring(7);
     const simConv: Conversation = {
       id: newId,
-      title: 'Roleplay Session',
+      title: 'TestDrive Session',
       messages: [],
       currentStep: 'entry',
       currentPath: null,
@@ -276,11 +297,16 @@ export function HomeScreen() {
               </div>
             </header>
 
-            <NotificationDrawer 
+            <NotificationDrawer
               isOpen={isNotificationsOpen}
               onClose={() => setIsNotificationsOpen(false)}
               notifications={notifications}
               onSelectChat={handleSelectChat}
+              onSelectInboxConversation={(id) => {
+                setDeepLinkConversationId(id);
+                setActiveView('conversations');
+                setIsNotificationsOpen(false);
+              }}
             />
 
             {/* Content */}
