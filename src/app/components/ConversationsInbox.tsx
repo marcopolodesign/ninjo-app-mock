@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, ListFilter, Bell, ArrowLeft, Send } from 'lucide-react';
 import svgPathsList from '../../imports/svg-f5pypiygoj';
