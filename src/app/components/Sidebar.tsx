@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import {
   MessageSquare, Settings, BrainCircuit, Users,
   BarChart2, Play, Link2
 } from 'lucide-react';
 import NinjoLogo from './ninjo-logo.svg';
+import { ProfileSheet } from './ProfileSheet';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -33,6 +34,8 @@ export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView
     { id: 'connections', icon: Link2, label: 'Connections' },
   ];
 
+  const [showProfile, setShowProfile] = useState(false);
+
   const handleMenuClick = (id: ViewType) => {
     onViewChange(id);
     onClose();
@@ -58,10 +61,7 @@ export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView
         <div className="pt-20 px-6 flex flex-col gap-10 overflow-y-auto flex-1">
           {/* Top section: Menu and Logo */}
           <div className="flex flex-col gap-11">
-             <div className="flex items-center gap-3">
-               <img src={NinjoLogo} alt="Ninjō" className="w-8 h-8 rounded-[6px]" />
-               <span className="text-sm font-normal tracking-widest text-black">NINJŌ</span>
-             </div>
+             <img src={NinjoLogo} alt="Ninjō" className="w-10 h-10" />
 
              <div className="flex flex-col gap-5">
                {menuItems.map((item) => (
@@ -88,7 +88,7 @@ export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView
                 <button
                   key={chat.id}
                   onClick={() => onSelectChat(chat.id)}
-                  className="group flex items-center justify-between text-[15px] text-zinc-600 line-clamp-1 font-mono-io tracking-tight text-left hover:text-black transition-colors w-full"
+                  className="group flex items-center justify-between text-[15px] text-zinc-600 line-clamp-1 font-gt-america tracking-tight text-left hover:text-black transition-colors w-full"
                 >
                   <span className="truncate flex items-center gap-1.5">
                     {chat.isSimulation && <Play className="w-3 h-3 text-[#FF8F40] shrink-0" />}
@@ -129,7 +129,10 @@ export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView
               <Settings className="w-5 h-5 shrink-0" />
               <span className="text-[15px] font-normal uppercase tracking-tight text-black">SETTINGS</span>
             </button>
-            <button className="flex items-center gap-3.5 text-left text-black transition-colors">
+            <button
+              onClick={() => setShowProfile(true)}
+              className="flex items-center gap-3.5 text-left text-black transition-colors"
+            >
                <div className="bg-[#b5e3ff] w-8 h-8 rounded-full flex items-center justify-center">
                  <span className="text-[11px] font-normal">FS</span>
                </div>
@@ -138,6 +141,8 @@ export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView
           </div>
         </div>
       </motion.div>
+
+      <ProfileSheet isOpen={showProfile} onClose={() => setShowProfile(false)} />
     </>
   );
 }
