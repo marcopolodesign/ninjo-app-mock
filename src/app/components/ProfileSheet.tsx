@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Globe, Bell, Lock, LogOut, ChevronRight, Smartphone } from 'lucide-react';
+import { X, Globe, Bell, Lock, LogOut, ChevronRight, Smartphone, Cable } from 'lucide-react';
 
 interface ProfileSheetProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenConnections?: () => void;
 }
 
-export function ProfileSheet({ isOpen, onClose }: ProfileSheetProps) {
+export function ProfileSheet({ isOpen, onClose, onOpenConnections }: ProfileSheetProps) {
   const [haptic, setHaptic] = useState(true);
 
   const Card = ({ children }: { children: React.ReactNode }) => (
@@ -165,6 +166,18 @@ export function ProfileSheet({ isOpen, onClose }: ProfileSheetProps) {
                       label="Privacy"
                       onClick={() => window.open('https://ninjo.ai/privacy', '_blank')}
                       right={null}
+                    />
+                  </Card>
+                </div>
+
+                {/* Connections */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-[11px] font-mono-io uppercase tracking-widest text-zinc-500 px-1">Integrations</span>
+                  <Card>
+                    <ActionRow
+                      icon={Cable}
+                      label="Connections"
+                      onClick={() => { onClose(); onOpenConnections?.(); }}
                     />
                   </Card>
                 </div>
