@@ -253,7 +253,10 @@ export function HomeScreen() {
             if (view !== 'conversations') setDeepLinkConversationId(null);
             setIsSidebarOpen(false);
           }}
-          onNewRoleplay={handleNewRoleplay}
+          onOpenConnections={() => {
+            setActiveView('connections');
+            setIsSidebarOpen(false);
+          }}
         />
 
         <motion.main

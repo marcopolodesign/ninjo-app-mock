@@ -75,16 +75,14 @@ interface SidebarProps {
   onSelectChat: (id: string) => void;
   activeView: ViewType;
   onViewChange: (view: ViewType) => void;
-  onNewRoleplay: () => void;
+  onOpenConnections?: () => void;
 }
 
-export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView, onViewChange, onNewRoleplay }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView, onViewChange, onOpenConnections }: SidebarProps) {
   const menuItems: { id: ViewType; icon: React.ElementType; label: string }[] = [
     { id: 'operator', icon: OperatorIcon, label: 'Operator' },
     { id: 'reports', icon: ReportsIcon, label: 'Reports' },
-    { id: 'amplify', icon: AmplifyIcon, label: 'Amplify' },
     { id: 'conversations', icon: ConversationsIcon, label: 'Conversations' },
-    { id: 'connections', icon: SettingsIcon, label: 'Connections' },
   ];
 
   const [showProfile, setShowProfile] = useState(false);
@@ -131,14 +129,6 @@ export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView
                  </button>
                ))}
 
-               {/* TestDrive entry */}
-               <button
-                 onClick={() => { onNewRoleplay(); onClose(); }}
-                 className="flex items-center gap-3.5 text-left text-zinc-500 hover:text-black transition-colors"
-               >
-                 <Play className="w-5 h-5 shrink-0" />
-                 <span className="text-[15px] font-normal font-mono-io uppercase tracking-tight">New TestDrive</span>
-               </button>
              </div>
           </div>
 
@@ -191,7 +181,7 @@ export function Sidebar({ isOpen, onClose, recentChats, onSelectChat, activeView
         </div>
       </motion.div>
 
-      <ProfileSheet isOpen={showProfile} onClose={() => setShowProfile(false)} />
+      <ProfileSheet isOpen={showProfile} onClose={() => setShowProfile(false)} onOpenConnections={onOpenConnections} />
     </>
   );
 }
