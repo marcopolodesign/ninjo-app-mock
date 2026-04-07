@@ -6,17 +6,17 @@ interface ChatMessage {
   id: string;
   text: string;
   time: string;
-  isMe: boolean; // true = user (operator/setter), false = AI (customer)
+  isMe: boolean; // true = user (client/prospect), false = AI (operator)
 }
 
-// Scripted customer replies — realistic DM prospect flow
-const CUSTOMER_SCRIPT: string[] = [
-  "Hola! Vi tu post y me interesó bastante, ¿de qué se trata exactamente?",
-  "Ah okey, ¿y cómo funciona? ¿Es algo que puedo hacer solo o necesito ayuda?",
-  "¿Y cuánto cuesta más o menos? ¿Hay algún plan o paquete?",
-  "Mmm, suena bien. ¿Tenés casos de éxito o algo que me puedas mostrar?",
-  "Sí, me interesa. ¿Cómo seguimos? ¿Podemos hablar por llamada?",
-  "Dale, ¿qué horarios tenés disponibles?",
+// Scripted operator replies — realistic DM sales flow
+const OPERATOR_SCRIPT: string[] = [
+  "¡Hola! Gracias por escribir. Vi que te interesó el contenido — cuéntame, ¿qué fue lo que más te llamó la atención?",
+  "Perfecto. Básicamente trabajamos con personas que quieren resultados concretos sin perder tiempo. El proceso es simple y lo acompañamos de principio a fin.",
+  "Depende del perfil y los objetivos, pero tenemos opciones desde acceso básico hasta acompañamiento completo. ¿Cuál es tu situación actual?",
+  "Sí, claro. Tenemos varios casos documentados — personas que en 60-90 días lograron resultados reales. Te puedo compartir alguno si querés.",
+  "Genial que lo veas así. El siguiente paso es una llamada corta de 20 minutos para ver si hay fit. Sin compromiso. ¿Te va bien esta semana?",
+  "Perfecto, te mando el link para reservar el horario que más te convenga. 🙌",
 ];
 
 function getTime(): string {
@@ -37,14 +37,14 @@ export function RoleplayChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const startRoleplay = () => {
+  const startTestDrive = () => {
     setStarted(true);
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
       setMessages([{
         id: '0',
-        text: CUSTOMER_SCRIPT[0],
+        text: OPERATOR_SCRIPT[0],
         time: getTime(),
         isMe: false,
       }]);
@@ -66,14 +66,14 @@ export function RoleplayChat() {
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
 
-    if (scriptIndex < CUSTOMER_SCRIPT.length) {
+    if (scriptIndex < OPERATOR_SCRIPT.length) {
       setIsTyping(true);
       const delay = 800 + Math.random() * 1200;
       setTimeout(() => {
         setIsTyping(false);
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
-          text: CUSTOMER_SCRIPT[scriptIndex],
+          text: OPERATOR_SCRIPT[scriptIndex],
           time: getTime(),
           isMe: false,
         }]);
@@ -89,19 +89,19 @@ export function RoleplayChat() {
   return (
     <div className="flex flex-col h-full bg-white">
 
-      {/* Simulation banner */}
+      {/* TestDrive banner */}
       <div className="shrink-0 bg-[#FF8F40]/10 border-b border-[#FF8F40]/20 text-[#FF8F40] text-[11px] font-mono-io uppercase tracking-widest px-4 py-2 text-center">
-        Simulation Mode — AI acting as a customer
+        TestDrive — AI responding as your Operator
       </div>
 
-      {/* Customer "profile" header */}
+      {/* Operator "profile" header */}
       <div className="px-4 py-3 border-b border-[#e8e8e8] flex items-center gap-3 shrink-0 bg-white">
-        <div className="size-9 rounded-full bg-zinc-100 border border-black/10 flex items-center justify-center text-[13px] font-gt-america font-medium shrink-0">
-          C
+        <div className="size-9 rounded-full bg-orange-50 border border-[#FF8F40]/20 flex items-center justify-center text-[13px] font-gt-america font-medium shrink-0 text-[#FF8F40]">
+          AI
         </div>
         <div className="flex flex-col">
-          <span className="text-[15px] font-gt-america font-medium tracking-tight">Customer</span>
-          <span className="text-[10px] font-mono-io text-zinc-400 uppercase tracking-widest">Prospect · Instagram DM</span>
+          <span className="text-[15px] font-gt-america font-medium tracking-tight">Your Operator</span>
+          <span className="text-[10px] font-mono-io text-zinc-400 uppercase tracking-widest">Active · Instagram DM</span>
         </div>
       </div>
 
@@ -119,16 +119,16 @@ export function RoleplayChat() {
               <Play className="w-6 h-6 text-[#FF8F40] ml-0.5" />
             </div>
             <div className="flex flex-col items-center gap-1.5 text-center max-w-[260px]">
-              <p className="text-[15px] font-mono-io text-black tracking-tight">Ready to test your Operator?</p>
+              <p className="text-[15px] font-mono-io text-black tracking-tight">Test your Operator as a prospect</p>
               <p className="text-[12px] font-mono-io text-zinc-400 leading-relaxed">
-                The AI will act as a customer reaching out via DM. You respond as the operator/setter.
+                Talk to your AI Operator as if you were a client reaching out via DM.
               </p>
             </div>
             <button
-              onClick={startRoleplay}
+              onClick={startTestDrive}
               className="bg-black text-white text-[12px] font-mono-io uppercase tracking-widest px-6 py-3 rounded-full hover:bg-zinc-800 transition-colors"
             >
-              Start Roleplay
+              Start TestDrive
             </button>
           </motion.div>
         ) : (
@@ -184,7 +184,7 @@ export function RoleplayChat() {
               )}
             </AnimatePresence>
 
-            {scriptIndex >= CUSTOMER_SCRIPT.length && !isTyping && messages.length > 0 && (
+            {scriptIndex >= OPERATOR_SCRIPT.length && !isTyping && messages.length > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -211,7 +211,7 @@ export function RoleplayChat() {
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Reply as the operator..."
+              placeholder="Reply as a prospect..."
               className="flex-1 bg-transparent border-none outline-none text-[14px] text-[#585858] font-gt-america"
             />
             <button

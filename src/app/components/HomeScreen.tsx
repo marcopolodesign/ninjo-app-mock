@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, Bell, Plus, ArrowUp, X, Sparkles, Mic, Link as LinkIcon } from 'lucide-react';
 import { Sidebar, type ViewType } from './Sidebar';
@@ -11,6 +11,8 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { PromptBox } from './PromptBox';
 import { ConversationsInbox } from './ConversationsInbox';
 import { ConnectionsView } from './ConnectionsView';
+import { AmplifyView } from './AmplifyView';
+import { AllChatsView } from './AllChatsView';
 
 import NinjoLogo from '../../imports/Frame1443-2003-674';
 
@@ -31,14 +33,29 @@ interface Notification {
   id: string;
   chatId: string;
   title: string;
-  type: 'ready' | 'handoff';
+  type: 'ready' | 'handoff' | 'report';
   timestamp: Date;
+  leadName?: string;
+  reason?: string;
+  targetView?: 'inbox';
+  inboxConversationId?: string;
+  reportTaskId?: string;
 }
 
 export function HomeScreen() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [autoOpenResultTaskId, setAutoOpenResultTaskId] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: 'report-daily-1',
+      chatId: '',
+      title: 'Daily Growth Analysis',
+      type: 'report',
+      timestamp: new Date(),
+      reportTaskId: 'default-1',
+    },
+  ]);
   const [isActive, setIsActive] = useState(false);
   const [inputText, setInputText] = useState('');
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -65,6 +82,23 @@ export function HomeScreen() {
     }
   ]);
   const { user } = useAuth();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNotifications(prev => [{
+        id: 'hot-lead-notif-1',
+        chatId: '',
+        title: 'Carlos Mendez · Hot Lead',
+        type: 'handoff' as const,
+        timestamp: new Date(),
+        leadName: 'Carlos Mendez',
+        reason: 'Asked for pricing · Ready to sign',
+        targetView: 'inbox' as const,
+        inboxConversationId: 'hot-lead-carlos',
+      }, ...prev]);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const suggestions = [
     {
@@ -170,7 +204,7 @@ export function HomeScreen() {
     const newId = Math.random().toString(36).substring(7);
     const simConv: Conversation = {
       id: newId,
-      title: 'Roleplay Session',
+      title: 'TestDrive Session',
       messages: [],
       currentStep: 'entry',
       currentPath: null,
@@ -219,7 +253,10 @@ export function HomeScreen() {
             if (view !== 'conversations') setDeepLinkConversationId(null);
             setIsSidebarOpen(false);
           }}
-          onNewRoleplay={handleNewRoleplay}
+          onOpenConnections={() => {
+            setActiveView('connections');
+            setIsSidebarOpen(false);
+          }}
         />
 
         <motion.main
@@ -253,7 +290,7 @@ export function HomeScreen() {
                 <Menu className="w-6 h-6 shrink-0" />
                 {activeView !== 'operator' && (
                   <span className="font-['MD_IO'] text-[18px] leading-none uppercase tracking-tight text-black">
-                    {activeView === 'conversations' ? 'Conversations' : activeView === 'reports' ? 'Reports' : activeView === 'connections' ? 'Connections' : 'Agents'}
+                    {activeView === 'conversations' ? 'Conversations' : activeView === 'reports' ? 'Reports' : activeView === 'connections' ? 'Connections' : activeView === 'amplify' ? 'Amplify' : activeView === 'all-chats' ? 'All Chats' : 'Agents'}
                   </span>
                 )}
               </button>
@@ -276,16 +313,49 @@ export function HomeScreen() {
               </div>
             </header>
 
-            <NotificationDrawer 
+            <NotificationDrawer
               isOpen={isNotificationsOpen}
               onClose={() => setIsNotificationsOpen(false)}
               notifications={notifications}
               onSelectChat={handleSelectChat}
+              onSelectInboxConversation={(id) => {
+                setDeepLinkConversationId(id);
+                setActiveView('conversations');
+                setIsNotificationsOpen(false);
+              }}
+              onViewReportResult={(taskId) => {
+                setAutoOpenResultTaskId(taskId);
+                setActiveView('reports');
+                setIsNotificationsOpen(false);
+              }}
             />
 
             {/* Content */}
             <AnimatePresence mode="wait">
-              {activeView === 'connections' ? (
+              {activeView === 'all-chats' ? (
+                <motion.div
+                  key="all-chats-view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 h-full overflow-hidden relative"
+                >
+                  <AllChatsView
+                    chats={conversations.map(c => ({ id: c.id, title: c.title, unread: c.unread, isSimulation: c.type === 'simulation' }))}
+                    onSelectChat={(id) => { handleSelectChat(id); setActiveView('operator'); }}
+                  />
+                </motion.div>
+              ) : activeView === 'amplify' ? (
+                <motion.div
+                  key="amplify-view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 h-full overflow-hidden relative"
+                >
+                  <AmplifyView />
+                </motion.div>
+              ) : activeView === 'connections' ? (
                 <motion.div
                   key="connections-view"
                   initial={{ opacity: 0 }}
@@ -315,9 +385,13 @@ export function HomeScreen() {
                 >
                   <ReportsView
                     onViewConversation={(id) => {
-                      setDeepLinkConversationId(id);
+                      if (id) setDeepLinkConversationId(id);
                       setActiveView('conversations');
                     }}
+                    onGoToAmplify={() => setActiveView('amplify')}
+                    onGoToTestDrive={handleNewRoleplay}
+                    autoOpenResultTaskId={autoOpenResultTaskId}
+                    onAutoOpenConsumed={() => setAutoOpenResultTaskId(null)}
                   />
                 </motion.div>
               ) : !isActive ? (
