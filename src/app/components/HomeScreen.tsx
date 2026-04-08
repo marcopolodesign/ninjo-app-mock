@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, Bell, Plus, ArrowUp, X, Sparkles, Mic, Link as LinkIcon } from 'lucide-react';
+import { Menu, Bell, Plus, ArrowUp, X, Sparkles, Mic, Link as LinkIcon, ArrowLeft } from 'lucide-react';
 import { Sidebar, type ViewType } from './Sidebar';
 import { MetricsFlow, type Message, type StepType, type PathType } from './MetricsFlow';
 import { ReportsView } from './ReportsView';
@@ -27,6 +27,7 @@ interface Conversation {
   isReady?: boolean;
   unread?: boolean;
   type?: 'normal' | 'simulation';
+  channel?: 'instagram' | 'whatsapp' | 'x' | 'telegram';
 }
 
 interface Notification {
@@ -79,6 +80,16 @@ export function HomeScreen() {
       currentPath: null,
       isReady: true,
       unread: false
+    },
+    {
+      id: '3',
+      title: "Lucas Herrera · ready to book a call",
+      messages: [],
+      currentStep: 'entry',
+      currentPath: null,
+      isReady: true,
+      unread: true,
+      channel: 'whatsapp',
     }
   ]);
   const { user } = useAuth();
@@ -244,7 +255,7 @@ export function HomeScreen() {
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
-          recentChats={conversations.map(c => ({ id: c.id, title: c.title, unread: c.unread, isSimulation: c.type === 'simulation' }))}
+          recentChats={conversations.map(c => ({ id: c.id, title: c.title, unread: c.unread, isSimulation: c.type === 'simulation', channel: c.channel }))}
           onSelectChat={handleSelectChat}
           activeView={activeView}
           onViewChange={(view) => {
@@ -286,8 +297,8 @@ export function HomeScreen() {
 
             {/* Header */}
             <header className="flex items-center justify-between px-6 h-14 shrink-0 z-10 relative">
-              <button onClick={() => setIsSidebarOpen(true)} className="flex items-center gap-4 p-1 hover:bg-zinc-100 transition-colors rounded-lg">
-                <Menu className="w-6 h-6 shrink-0" />
+              <button onClick={() => setIsSidebarOpen(prev => !prev)} className="flex items-center gap-4 p-1 hover:bg-zinc-100 transition-colors rounded-lg">
+                {isSidebarOpen ? <ArrowLeft className="w-6 h-6 shrink-0" /> : <Menu className="w-6 h-6 shrink-0" />}
                 {activeView !== 'operator' && (
                   <span className="font-['MD_IO'] text-[18px] leading-none uppercase tracking-tight text-black">
                     {activeView === 'conversations' ? 'Conversations' : activeView === 'reports' ? 'Reports' : activeView === 'connections' ? 'Connections' : activeView === 'amplify' ? 'Amplify' : activeView === 'all-chats' ? 'All Chats' : 'Agents'}
