@@ -464,7 +464,7 @@ function ConnectSheet({
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-export function ConnectionsView() {
+export function ConnectionsView({ hideHeader }: { hideHeader?: boolean }) {
   const [connectedMap, setConnectedMap] = useState<Record<string, boolean>>({});
   const [featuresMap, setFeaturesMap] = useState<Record<string, Feature[]>>(() => {
     const init: Record<string, Feature[]> = {};
@@ -498,13 +498,15 @@ export function ConnectionsView() {
     <div className="flex-1 h-full overflow-y-auto bg-white relative">
 
       {/* Header */}
-      <div className="px-5 pt-6 pb-5 border-b border-[#f0f0f0]">
-        <p className="text-[11px] font-mono-io uppercase tracking-widest text-[#FF8F40] mb-1">Ninjo</p>
-        <h1 className="text-[22px] font-mono-io font-normal tracking-tight text-black leading-tight">Connections</h1>
-        <p className="text-[13px] text-zinc-500 mt-1.5 leading-snug" style={{ fontFamily: 'Inter, sans-serif' }}>
-          Connect Ninjo to your platforms and automate your workflows.
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="px-5 pt-6 pb-5 border-b border-[#f0f0f0]">
+          <p className="text-[11px] font-mono-io uppercase tracking-widest text-[#FF8F40] mb-1">Ninjo</p>
+          <h1 className="text-[22px] font-mono-io font-normal tracking-tight text-black leading-tight">Connections</h1>
+          <p className="text-[13px] text-zinc-500 mt-1.5 leading-snug" style={{ fontFamily: 'Inter, sans-serif' }}>
+            Connect Ninjo to your platforms and automate your workflows.
+          </p>
+        </div>
+      )}
 
       {/* Integration cards */}
       <div className="px-5 py-5 flex flex-col gap-3">

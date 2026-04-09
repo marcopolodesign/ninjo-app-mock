@@ -301,7 +301,7 @@ export function HomeScreen() {
                 {isSidebarOpen ? <ArrowLeft className="w-6 h-6 shrink-0" /> : <Menu className="w-6 h-6 shrink-0" />}
                 {activeView !== 'operator' && (
                   <span className="font-['MD_IO'] text-[18px] leading-none uppercase tracking-tight text-black">
-                    {activeView === 'conversations' ? 'Conversations' : activeView === 'reports' ? 'Reports' : activeView === 'connections' ? 'Connections' : activeView === 'amplify' ? 'Amplify' : activeView === 'all-chats' ? 'All Chats' : 'Agents'}
+                    {activeView === 'conversations' ? 'Conversations' : activeView === 'reports' ? 'Reports' : activeView === 'amplify' ? 'Amplify' : activeView === 'all-chats' ? 'All Chats' : 'Agents'}
                   </span>
                 )}
               </button>
@@ -365,16 +365,6 @@ export function HomeScreen() {
                   className="flex-1 h-full overflow-hidden relative"
                 >
                   <AmplifyView />
-                </motion.div>
-              ) : activeView === 'connections' ? (
-                <motion.div
-                  key="connections-view"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex-1 h-full overflow-hidden relative"
-                >
-                  <ConnectionsView />
                 </motion.div>
               ) : activeView === 'conversations' ? (
                 <motion.div

@@ -75,6 +75,7 @@ export function ProfileSheet({ isOpen, onClose, onOpenConnections }: ProfileShee
   const [haptic, setHaptic] = useState(true);
   const [showNinjoGo, setShowNinjoGo] = useState(false);
   const [showLearn, setShowLearn] = useState(false);
+  const [showConnections, setShowConnections] = useState(false);
   const [handoffChannels, setHandoffChannels] = useState([
     { id: 'slack',    name: 'Slack',     enabled: true  },
     { id: 'whatsapp', name: 'WhatsApp',  enabled: true  },
@@ -85,6 +86,20 @@ export function ProfileSheet({ isOpen, onClose, onOpenConnections }: ProfileShee
 
   const toggleChannel = (id: string) => {
     setHandoffChannels(prev => prev.map(ch => ch.id === id ? { ...ch, enabled: !ch.enabled } : ch));
+  };
+
+  const [integrations, setIntegrations] = useState([
+    { id: 'slack',    name: 'Slack',          description: 'Alerts, summaries & reports',      color: '#4A154B', icon: <SlackIcon />,   connected: false },
+    { id: 'whatsapp', name: 'WhatsApp',        description: 'Send hot lead alerts via DM',       color: '#25D366', icon: <WhatsAppIcon />, connected: false },
+    { id: 'hubspot',  name: 'HubSpot',         description: 'Sync contacts & pipelines',         color: '#FF7A59', icon: null,            connected: false },
+    { id: 'ghl',      name: 'GoHighLevel',     description: 'Full CRM & automation sync',        color: '#16A34A', icon: null,            connected: false },
+    { id: 'zapier',   name: 'Zapier',          description: 'Connect 5,000+ apps',               color: '#FF4A00', icon: null,            connected: false },
+    { id: 'make',     name: 'Make',            description: 'Advanced workflow automation',      color: '#6D28D9', icon: null,            connected: false },
+    { id: 'n8n',      name: 'n8n',             description: 'Self-hosted automations',           color: '#EA4B71', icon: null,            connected: false },
+  ]);
+
+  const toggleIntegration = (id: string) => {
+    setIntegrations(prev => prev.map(i => i.id === id ? { ...i, connected: !i.connected } : i));
   };
 
   const Card = ({ children }: { children: React.ReactNode }) => (
@@ -146,14 +161,81 @@ export function ProfileSheet({ isOpen, onClose, onOpenConnections }: ProfileShee
           {/* Sheet */}
           <motion.div
             initial={{ y: '100%' }}
-            animate={{ y: 0, height: (showNinjoGo || showLearn) ? '100%' : '90%' }}
+            animate={{ y: 0, height: (showNinjoGo || showLearn || showConnections) ? '100%' : '90%' }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 280 }}
             className="fixed bottom-0 left-0 right-0 z-[70] bg-[#111111] overflow-hidden"
-            style={{ borderRadius: (showNinjoGo || showLearn) ? 0 : '24px 24px 0 0' }}
+            style={{ borderRadius: (showNinjoGo || showLearn || showConnections) ? 0 : '24px 24px 0 0' }}
           >
             <AnimatePresence mode="wait">
-              {showLearn ? (
+              {showConnections ? (
+                <motion.div
+                  key="connections"
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+                  className="flex flex-col h-full"
+                >
+                  {/* Sub-page header */}
+                  <div className="flex items-center gap-3 px-5 pt-14 pb-4 shrink-0">
+                    <button
+                      onClick={() => setShowConnections(false)}
+                      className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-white" />
+                    </button>
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-mono-io uppercase tracking-widest text-zinc-500 leading-tight">Integrations</span>
+                      <span className="text-[17px] font-mono-io uppercase tracking-widest text-white leading-tight">Connections</span>
+                    </div>
+                  </div>
+
+                  {/* Sub-page content */}
+                  <div className="overflow-y-auto flex-1 pb-16">
+                    <div className="px-4 pt-2 pb-8 flex flex-col gap-5">
+                      <p className="text-[13px] font-gt-america text-zinc-400 leading-relaxed px-1">
+                        Connect Ninjo to your platforms and automate your workflows.
+                      </p>
+                      <Card>
+                        {integrations.map((integration) => (
+                          <button
+                            key={integration.id}
+                            className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-white/5 transition-colors text-left"
+                          >
+                            <div
+                              className="w-7 h-7 rounded-[7px] flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: `${integration.color}33` }}
+                            >
+                              {integration.icon
+                                ? <span style={{ color: integration.color }}>{integration.icon}</span>
+                                : <span className="text-[10px] font-mono-io font-bold" style={{ color: integration.color }}>{integration.name.slice(0, 2).toUpperCase()}</span>
+                              }
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[15px] font-gt-america text-white">{integration.name}</p>
+                              <p className="text-[12px] font-gt-america text-zinc-500 mt-0.5 truncate">{integration.description}</p>
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleIntegration(integration.id); }}
+                              className={`w-12 h-7 rounded-full transition-colors shrink-0 relative ${integration.connected ? 'bg-[#FF8F40]' : 'bg-zinc-600'}`}
+                            >
+                              <motion.div
+                                animate={{ x: integration.connected ? 20 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-5 h-5 bg-white rounded-full shadow"
+                              />
+                            </button>
+                          </button>
+                        ))}
+                      </Card>
+                      <span className="text-[11px] font-mono-io text-zinc-500 px-1">
+                        {integrations.filter(i => i.connected).length} of {integrations.length} integrations active
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : showLearn ? (
                 <motion.div
                   key="learn"
                   initial={{ x: '100%' }}
@@ -355,7 +437,7 @@ export function ProfileSheet({ isOpen, onClose, onOpenConnections }: ProfileShee
                     <ActionRow
                       icon={Cable}
                       label="Connections"
-                      onClick={() => { onClose(); onOpenConnections?.(); }}
+                      onClick={() => setShowConnections(true)}
                     />
                   </Card>
                 </div>
